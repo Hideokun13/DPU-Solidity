@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Web3 Basic Usage</title>
+    <link rel="stylesheet" href="bootstrap/dist/css/bootstrap.min.css">
+    <script src="bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="jquery/dist/jquery.min.js"></script>
+    <script src="web3/dist/web3.min.js"></script>
+    <script src="bignumber.js/bignumber.js"></script>
+    <script src="js/basic.js"></script>
+</head>
+<body onload="init()">
+    <div class="container-fluid">
+        <div class="card m-4">
+            <div class="card-header">Basic DApp</div>
+            <div class="card-body">
+                <div class="card mb-3">
+                    <div class="card header">(1) Get All Accounts</div>
+                    <div class="card body">
+                        <table class="table text-center">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Account Address</th>
+                                    <th scope="col">Balance (Ether)</th>
+                                    <th scope="col">Transaction Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="AccountList">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Transfer Money
+                    </div>
+                    <div class="card-body">
+                        <select id="Sender" class="form-select" aria-label="Default select example">
+                            <option selected>Select Sender Account</option>
+                            <option value="1">One</option>
+                            <option value="2">Two</option>
+                            <option value="3">Three</option>
+                        </select>
+                    </div>
+                    <br>
+                    <div class="card-body">
+                        <select id="Receiver" class="form-select" aria-label="Default select example">
+                            <option selected>Select Receiver Account</option>
+                            <option value="1">One</option>
+                            <option value="2">Two</option>
+                            <option value="3">Three</option>
+                        </select>
+                        <br>
+                        <div class="row">
+                            <div class="col-2">
+                              <label for="TransferAmount">Transfer Amount</label>
+                            </div>
+                            <div class="col-7">
+                              <input id="TransferAmount" type="text" class="form-control" placeholder="Enter Amount Here" aria-label="Transfer Amount">
+                            </div>
+                            <div class="col-1">
+                                <div>Ether</div>
+                              </div>
+                              <div class="col-2">
+                                <button id="TranferBtn" class="btn btn-primary mb-3">Transfer</button>
+                              </div>
+                          </div>
+                          <hr>
+                          <legend class="lead fw-bold">Transaction Logs</legend>
+                          <ul id="TransactionLog"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
