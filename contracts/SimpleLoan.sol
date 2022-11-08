@@ -38,7 +38,12 @@ contract SimpleLoan {
         require(active, "Contract is not active");
         _;
     }
-
+    function getBorrowers() public view returns (address[] memory) {
+        return borrowers;
+    }
+    function getDebt(address borrower) public view returns (uint) {
+        return debts[borrower].balance;
+    }
     event Deposited(uint time, uint amount, uint balance);
 
     function deposit() public payable onlyOwner whenActive {
