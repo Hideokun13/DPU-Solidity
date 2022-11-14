@@ -1,6 +1,6 @@
 const WEB3_URL = 'http://localhost:9545/';
 //Global variable
-let web3, accounts, balances, txCounts;
+let web3, accounts, balances, txCounts, borrowIndex, payerIndex, borrower, payer;
 let owner, contractAddress, debts;
 let simpleLoan;
 const DEFAULT_OPTION = -1;
@@ -8,9 +8,70 @@ const DEFAULT_OPTION = -1;
 async function init() {
     const provider = new Web3.providers.HttpProvider(WEB3_URL);
     web3 = new Web3(provider);
-    
+    accounts = await web3.eth.getAccounts()
+
     await deployContract();
-    await populateAccountTable();
+    // await populateAccountTable();
+}
+
+async function setupBorrowButton() {
+    $('#BorrowBtn').on('click', async e => {
+        let borrowAmount = parseFloat($('#BorrowAmount').val());
+        if(isNaN(borrowAmount) || typeof borrower == 'undefined')
+            return;
+        const amount = web3.utils.toWei(borrowAmount, 'ether');
+        try {
+            const estGas = await simpleLoan.borrow.estimateGas(amount, {from: borrower});
+            const sendingGas = Math.round(estGas * 1.5);
+            const reciept = await simpleLoan.borrow(amount, {from: borrower, gas: sendingGas});
+            updateBorrowLog(reciept);
+        } catch (err) {
+            console.log(err);
+            alert('Unable to borrow');
+            return;
+        } finally {
+            resetBorrowControl();
+        }
+    });
+}
+
+function resetBorrowControl() {
+    $('#BorrowAmount').val('');
+    $('Borrowers').val(-1);
+}
+
+function updateBorrowLog(reciept) {
+    const logEntry = 
+    '<li><p>TxHash:' + reciept.transtactionHash + '</p>' +
+    '<p>BlockNumber:' + reciept.blockNumber + '</p>'  +
+    '<p>Borrower:' + reciept.from + '</p>' +
+    '<p>Gas used:' + reciept.cumulativeGasUsed + '</p>' +
+    '</li>';
+    $('#BorrowTxLog').append(logEntry);
+}
+
+function updateSelectOptions() {
+    if(!(Array.isArray(accounts) && accounts.length > 0)){
+        return;
+    }
+    let borrowOption = '<option value="-1">Select Borrower Account</option>'
+    for(let i = 1; i < accounts.length; i++){
+        borrowOption += '<option value="' + i + '">' + (i + 1) + ') ' + accounts[i] + '</option>';
+        $('#Borrowers').html(borrowOption);
+        $('#PaybackBorrowers').html(borrowOption);
+    }
+    $('#Borrowers').on('change', async e => {
+        borrowIndex = e.target.value;
+        borrower =  accounts[borrowIndex];
+        console.log('Borrowers', borrower);
+    });
+    
+    $('#PaybackBorrowers').on('change', async e => {
+        payerIndex = e.target.value;
+        payer = accounts[payerIndex];
+        console.log('PaybackBorrowers', payer);
+    });
+    
 }
 
 async function getLoanInfo() {
@@ -33,7 +94,7 @@ async function getLoanInfo() {
         console.log(err)
     }
 
-    await populateAccountTable();
+    // await populateAccountTable();
 }
 
 async function deployContract() {
@@ -45,6 +106,8 @@ async function deployContract() {
             contractAddress = simpleLoan.address;
             console.log('simple loan contract',simpleLoan);
             await getLoanInfo();
+            await populateAccountTable();
+            await updateSelectOptions();
         } catch (err) {
             console.log(err);
         }
@@ -56,9 +119,22 @@ async function getDebtsInfo() {
 }
 async function populateAccountTable() {
     try {
-        accounts = await web3.eth.getAccounts();
+        // accounts = await web3.eth.getAccounts();
         await getBalances();
         await getDebtsInfo();
+        const borrowers = await simpleLoan.getBorrowers.call();
+        const currentDebts = [];
+        for(let i = 0; i < accounts.length; i++){
+            let found = false;
+            for(let j = 0; j < borrowers.length; j++){
+                currentDebts[i] = web3.utils.fromWei(debts[j], 'ether');
+                found = true;
+                break;
+            }
+            if(!found)
+                currentDebts[i] = 0;
+        }
+
         if(Array.isArray(accounts) && accounts.length > 0){
             let htmlStr = '';
             for(let i = 0; i < accounts.length; i++){
@@ -67,7 +143,7 @@ async function populateAccountTable() {
                 htmlStr += '<th scope="row">' + (i + 1) + '</th>';
                 htmlStr += '<td>' + accounts[i] + '</td>';
                 htmlStr += '<td>' + Number(balanceEth).toFixed(8) + '</td>';
-                htmlStr += '<td>' + web3.utils.toWei(debts[i], 'ether') + '</td>';
+                htmlStr += '<td>' + currentDebts[i] + '</td>';
                 htmlStr += '</tr>';
             }
             $('#AccountList').html(htmlStr);
