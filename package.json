@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "lite-server",
+    "gn": "ganache-cli -s 999",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
